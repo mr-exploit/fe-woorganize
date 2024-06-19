@@ -5,6 +5,7 @@ import background from '../../../assets/images/bg-auth.png';
 import logo from '../../../assets/logo/logo-auth.svg';
 import { Link, useNavigate } from "react-router-dom";
 import { urlApi } from "../../../redux/config";
+import Swal from 'sweetalert2';
 
 const FormAuth = (props) => {
     const [email, setEmail] = useState("");
@@ -48,6 +49,11 @@ const FormAuth = (props) => {
                 console.log("check userResponse", userResponse.data[0])
                 user = userResponse.data[0];
                 console.log("check user", user)
+                Swal.fire({
+                    title: "Login Succefully!",
+                    text: "Login Successfully",
+                    icon: "success"
+                });
                 if (user && user.role === "admin") {
                     navigate("/admin/profile");
                 } else {
@@ -55,10 +61,20 @@ const FormAuth = (props) => {
                 }
             } catch (error) {
                 console.error("Error during login:", error.response ? error.response.data : error.message);
+                Swal.fire({
+                    title: "Login Succefully!",
+                    text: ` ${error.response.data.error}`,
+                    icon: "error"
+                });
             }
 
         } catch (error) {
             console.error("Error during login:", error.response ? error.response.data : error.message);
+            Swal.fire({
+                title: "Login Succefully!",
+                text: ` ${error.response.data.error}`,
+                icon: "error"
+            });
         }
     };
 
