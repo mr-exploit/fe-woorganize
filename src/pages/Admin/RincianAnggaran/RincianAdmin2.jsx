@@ -1,36 +1,125 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import NavbarAdmin from '../components/NavbarAdmin';
 import SidebarAdmin from '../components/SidebarAdmin';
 import Footer from '../../../components/Footer';
 import Swal from 'sweetalert2';
-
+import { Link, useNavigate } from "react-router-dom";
 
 const RincianAdmin2 = () => {
     const [popUp, setPopUp] = useState(false);
-
+    const [editPopUp, setEditPopUp] = useState(false);
+    const [dataRC, setDataRc] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
-        uraian: '',
-        vol: '',
-        hargaAwal: '',
-        jumlah: '',
-        keterangan: ''
+        Uraian: '',
+        Vol: '',
+        Harga_Awal: '',
+        Jumlah: '',
+        Keterangan: ''
     });
+    const [editFormData, setEditFormData] = useState(null);
+    const navigate = useNavigate(); // Initialize navigate
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const urlApiENV = import.meta.env.VITE_API_URL;
+                const url = `${urlApiENV}/api/rincian`;
+                console.log("check url", url);
 
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    navigate("/login"); // Redirect to login if no token found
+                    return;
+                }
+
+                const dataResponse = await axios.get(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                console.log("check dataResponse", dataResponse.data.data);
+                setDataRc(Array.isArray(dataResponse.data.data) ? dataResponse.data.data : []);
+                setLoading(false);
+            } catch (err) {
+                console.error("Error during fetch:", err.response ? err.response.data : err.message);
+                setError(err);
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [navigate, setDataRc]);
+
+    if (error) return <div>Error: {error.message}</div>;
+    
     const handlePopUp = () => {
         Swal.fire({
             title: "Success!",
             text: "Data has been successfully saved!",
             icon: "success"
         });
-        setPopUp(false)
-    }
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log(formData);
+        setPopUp(false);
     };
 
-    const handlePopup = () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const urlApiENV = import.meta.env.VITE_API_URL;
+            const url = `${urlApiENV}/api/rincian`;
+            const token = localStorage.getItem("token");
+
+            const response = await axios.post(url, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            setDataRc([...dataRC, response.data.data]);
+            setFormData({ Uraian: '', Vol: '', Harga_Awal: '', Jumlah: '', Keterangan: '' });
+            handlePopUp();
+        } catch (err) {
+           
+            const error = `Error during submit: ${err.response[0].msg ? err.response.data : err.msg}`
+            Swal.fire({
+                title: "Oops...",
+                text: error,
+                icon: "error"
+            });
+        }
+    };
+
+    const handleEdit = async (e) => {
+        e.preventDefault();
+        try {
+            const urlApiENV = import.meta.env.VITE_API_URL;
+            const url = `${urlApiENV}/api/rincian/${editFormData.id}`;
+            const token = localStorage.getItem("token");
+
+            const response = await axios.put(url, editFormData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const updatedData = dataRC.map(item => item.id === response.data.data.id ? response.data.data : item);
+            setDataRc(updatedData);
+            setEditFormData(null);
+            handlePopUp();
+        } catch (err) {
+            console.error("Error during edit:", err.response ? err.response.data : err.msg);
+            const error = `Error during edit: ${err.response ? err.response.data : err.msg}`
+            Swal.fire({
+                title: "Oops...",
+                text: error,
+                icon: "error"
+            });
+        }
+    };
+
+    const handlePopup = (id) => {
         Swal.fire({
             title: "Are you sure?",
             text: "You won't be able to revert this!",
@@ -39,90 +128,91 @@ const RincianAdmin2 = () => {
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
             confirmButtonText: "Yes, delete it!"
-        }).then((result) => {
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({
-                    title: "Deleted!",
-                    text: "Your file has been deleted.",
-                    icon: "success"
-                });
+                try {
+                    const urlApiENV = import.meta.env.VITE_API_URL;
+                    const url = `${urlApiENV}/api/rincian/${id}`;
+                    const token = localStorage.getItem("token");
+
+                    await axios.delete(url, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+
+                    setDataRc(dataRC.filter(item => item.id !== id));
+                    Swal.fire({
+                        title: "Deleted!",
+                        text: "Your file has been deleted.",
+                        icon: "success"
+                    });
+                } catch (err) {
+                    console.error("Error during delete:", err.response ? err.response.data : err.msg);
+                    const error = `Error during delete: ${err.response ? err.response.data : err.msg}`
+                    Swal.fire({
+                        title: "Oops...",
+                        text: error,
+                        icon: "error"
+                    });
+                }
             }
         });
     }
 
-    const PopUpForm = () => {
-        return (
-            <div className='z-30 absolute left-0 right-0 top-0 bottom-0 bg-black bg-opacity-70 h-full flex justify-center items-center'>
-                <form onSubmit={handleSubmit} action="" className='bg-white p-12 rounded-xl w-[700px]'>
-                    <div>
-                        <div className='flex flex-col gap-5'>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Uraian</label>
-                                <input name='uraian' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Vol</label>
-                                <input name='vol' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Harga Awal</label>
-                                <input name='hargaAwal' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Jumlah</label>
-                                <input name='jumlah' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Keterangan</label>
-                                <input name='keterangan' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
-                        </div>
-                    </div>
-                    <div className='flex gap-4 mt-[50px] '>
-                        <button onClick={handlePopUp} className='px-5 py-3 bg-neutral4 text-white rounded-[8px] cursor-pointer items-center'>Simpan</button>
-                        <button type="button" className='bg-neutral2 px-5 py-3 rounded-[8px] text-neutral5 font-semibold' onClick={() => { setPopUp(false) }}>Batal</button>
-                    </div>
-                </form>
-            </div>
-        );
-    };
+    const formatNumber = (number) => {
+        return number.toLocaleString('id-ID');
+    }
 
-    const PopUpEdit = () => {
-        return (
-            <div className='z-30 absolute left-0 right-0 top-0 bottom-0 bg-black bg-opacity-70 h-full flex justify-center items-center'>
-                <form onSubmit={handleSubmit} action="" className='bg-white p-12 rounded-xl w-[700px]'>
-                    <div>
-                        <div className='flex flex-col gap-5'>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Uraian</label>
-                                <input name='uraian' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Vol</label>
-                                <input name='vol' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Harga Awal</label>
-                                <input name='hargaAwal' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Jumlah</label>
-                                <input name='jumlah' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
-                            <div className='flex flex-col gap-[10px]'>
-                                <label htmlFor="" className='font-semibold text-gray-700'>Keterangan</label>
-                                <input name='keterangan' type="text" className='rounded-[8px] h-[50px]' />
-                            </div>
+const PopUpForm = () => (
+        <div className='z-30 absolute left-0 right-0 top-0 bottom-0 bg-black bg-opacity-70 h-full flex justify-center items-center'>
+            <form onSubmit={handleSubmit} className='bg-white p-12 rounded-xl w-[700px]'>
+                <div className='flex flex-col gap-5'>
+                    {Object.keys(formData).map((field) => (
+                        <div className='flex flex-col gap-[10px]' key={field}>
+                            <label htmlFor={field} className='font-semibold text-gray-700'>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
+                            <input
+                                name={field}
+                                type="text"
+                                className='rounded-[8px] h-[50px]'
+                                value={formData[field]}
+                                onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                            />
                         </div>
-                    </div>
-                    <div className='flex gap-4 mt-[50px] '>
-                        <button onClick={handlePopUp} className='px-5 py-3 bg-neutral4 text-white rounded-[8px] cursor-pointer items-center'>Ubah</button>
-                        <button type="button" className='bg-neutral2 px-5 py-3 rounded-[8px] text-neutral5 font-semibold' onClick={() => { setPopUp(false) }}>Batal</button>
-                    </div>
-                </form>
-            </div>
-        );
-    };
+                    ))}
+                </div>
+                <div className='flex gap-4 mt-[50px]'>
+                    <button type='submit' className='px-5 py-3 bg-neutral4 text-white rounded-[8px] cursor-pointer items-center'>Simpan</button>
+                    <button type="button" className='bg-neutral2 px-5 py-3 rounded-[8px] text-neutral5 font-semibold' onClick={() => setPopUp(false)}>Batal</button>
+                </div>
+            </form>
+        </div>
+    );
+
+    const PopUpEdit = () => (
+        <div className='z-30 absolute left-0 right-0 top-0 bottom-0 bg-black bg-opacity-70 h-full flex justify-center items-center'>
+            <form onSubmit={handleEdit} className='bg-white p-12 rounded-xl w-[700px]'>
+                <div className='flex flex-col gap-5'>
+                    {Object.keys(editFormData || {}).map((field) => (
+                        <div className='flex flex-col gap-[10px]' key={field}>
+                            <label htmlFor={field} className='font-semibold text-gray-700'>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
+                            <input
+                                name={field}
+                                type="text"
+                                className='rounded-[8px] h-[50px]'
+                                value={editFormData[field]}
+                                onChange={(e) => setEditFormData({ ...editFormData, [field]: e.target.value })}
+                            />
+                        </div>
+                    ))}
+                </div>
+                <div className='flex gap-4 mt-[50px]'>
+                    <button type='submit' className='px-5 py-3 bg-neutral4 text-white rounded-[8px] cursor-pointer items-center'>Ubah</button>
+                    <button type="button" className='bg-neutral2 px-5 py-3 rounded-[8px] text-neutral5 font-semibold' onClick={() => setEditPopUp(false)}>Batal</button>
+                </div>
+            </form>
+        </div>
+    );
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-100">
@@ -137,69 +227,43 @@ const RincianAdmin2 = () => {
                         <button onClick={() => setPopUp(true)} className="bg-zinc-500 text-white px-4 py-2 rounded-lg hover:bg-zinc-600 focus:outline-none focus:ring-2 focus:ring-opacity-75 mb-6">
                             Tambah Data
                         </button>
-                        <div className="mt-6">
-                            <div className="bg-gray-50 rounded-t-lg border border-gray-200">
-                                <div className="flex justify-between items-center p-4 text-xs font-normal text-gray-400">
-                                    <div className="w-8">No</div>
-                                    <div className="w-48">Uraian</div>
-                                    <div className="w-36">Vol</div>
-                                    <div className="w-36">Harga Awal</div>
-                                    <div className="w-36">Jumlah</div>
-                                    <div className="w-36">Keterangan</div>
-                                    <div className="w-24">Aksi</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-white border border-gray-200">
-                            <div className="flex justify-between items-center p-4">
-                                <div className="w-8 text-gray-900">1</div>
-                                <div className="w-48 text-gray-900">Catering Prasmanan</div>
-                                <div className="w-36 text-slate-800">100 Porsi</div>
-                                <div className="w-36 text-slate-800">Rp25.000/pax</div>
-                                <div className="w-36 text-slate-800">Rp3.500.000</div>
-                                <div className="w-36 text-slate-800">Konsumsi Tamu</div>
-                                <div className="w-24 flex space-x-2">
-                                    <button onClick={handlePopup} className="p-2.5 rounded-lg bg-gray-200 hover:bg-gray-300">
-                                        <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M1.5 4.99984H3.16667M3.16667 4.99984H16.5M3.16667 4.99984V16.6665C3.16667 17.1085 3.34226 17.5325 3.65482 17.845C3.96738 18.1576 4.39131 18.3332 4.83333 18.3332H13.1667C13.6087 18.3332 14.0326 18.1576 14.3452 17.845C14.6577 17.5325 14.8333 17.1085 14.8333 16.6665V4.99984H3.16667ZM5.66667 4.99984V3.33317C5.66667 2.89114 5.84226 2.46722 6.15482 2.15466C6.46738 1.8421 6.89131 1.6665 7.33333 1.6665H10.6667C11.1087 1.6665 11.5326 1.8421 11.8452 2.15466C12.1577 2.46722 12.3333 2.89114 12.3333 3.33317V4.99984M7.33333 9.1665V14.1665M10.6667 9.1665V14.1665" stroke="#4A5568" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </button>
-                                    <button onClick={() => setPopUp(true)} className="p-2.5 rounded-lg bg-gray-200 hover:bg-gray-300">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M14.1665 2.49993C14.3854 2.28106 14.6452 2.10744 14.9312 1.98899C15.2171 1.87054 15.5236 1.80957 15.8332 1.80957C16.1427 1.80957 16.4492 1.87054 16.7352 1.98899C17.0211 2.10744 17.281 2.28106 17.4998 2.49993C17.7187 2.7188 17.8923 2.97863 18.0108 3.2646C18.1292 3.55057 18.1902 3.85706 18.1902 4.16659C18.1902 4.47612 18.1292 4.78262 18.0108 5.06859C17.8923 5.35455 17.7187 5.61439 17.4998 5.83326L6.24984 17.0833L1.6665 18.3333L2.9165 13.7499L14.1665 2.49993Z" stroke="#4A5568" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-white border border-gray-200">
-                            <div className="flex justify-between items-center p-4">
-                                <div className="w-8 text-gray-900">2</div>
-                                <div className="w-48 text-gray-900">Sound System</div>
-                                <div className="w-36 text-slate-800">1 Paket</div>
-                                <div className="w-36 text-slate-800">Rp3.000.000</div>
-                                <div className="w-36 text-slate-800">Rp3.000.000</div>
-                                <div className="w-36 text-slate-800">Persewaan</div>
-                                <div className="w-24 flex space-x-2">
-                                    <button onClick={handlePopup} className="p-2.5 rounded-lg bg-gray-200 hover:bg-gray-300">
-                                        <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M1.5 4.99984H3.16667M3.16667 4.99984H16.5M3.16667 4.99984V16.6665C3.16667 17.1085 3.34226 17.5325 3.65482 17.845C3.96738 18.1576 4.39131 18.3332 4.83333 18.3332H13.1667C13.6087 18.3332 14.0326 18.1576 14.3452 17.845C14.6577 17.5325 14.8333 17.1085 14.8333 16.6665V4.99984H3.16667ZM5.66667 4.99984V3.33317C5.66667 2.89114 5.84226 2.46722 6.15482 2.15466C6.46738 1.8421 6.89131 1.6665 7.33333 1.6665H10.6667C11.1087 1.6665 11.5326 1.8421 11.8452 2.15466C12.1577 2.46722 12.3333 2.89114 12.3333 3.33317V4.99984M7.33333 9.1665V14.1665M10.6667 9.1665V14.1665" stroke="#4A5568" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </button>
-                                    <button onClick={() => setPopUp(true)} className="p-2.5 rounded-lg bg-gray-200 hover:bg-gray-300">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M14.1665 2.49993C14.3854 2.28106 14.6452 2.10744 14.9312 1.98899C15.2171 1.87054 15.5236 1.80957 15.8332 1.80957C16.1427 1.80957 16.4492 1.87054 16.7352 1.98899C17.0211 2.10744 17.281 2.28106 17.4998 2.49993C17.7187 2.7188 17.8923 2.97863 18.0108 3.2646C18.1292 3.55057 18.1902 3.85706 18.1902 4.16659C18.1902 4.47612 18.1292 4.78262 18.0108 5.06859C17.8923 5.35455 17.7187 5.61439 17.4998 5.83326L6.24984 17.0833L1.6665 18.3333L2.9165 13.7499L14.1665 2.49993Z" stroke="#4A5568" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
+                        <div className="mt-6 overflow-x-auto flex-1">
+                            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                                <thead>
+                                    <tr className="bg-gray-50">
+                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400">No</th>
+                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400">Uraian</th>
+                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400">Vol</th>
+                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400">Harga Awal</th>
+                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400">Jumlah</th>
+                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400">Keterangan</th>
+                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Array.isArray(dataRC) && dataRC.map((item, index) => (
+                                        <tr key={item.id}>
+                                            <td className="px-6 py-4 text-left text-sm text-gray-500">{index + 1}</td>
+                                            <td className="px-6 py-4 text-left text-sm text-gray-500">{item.Uraian}</td>
+                                            <td className="px-6 py-4 text-left text-sm text-gray-500">{item.Vol}</td>
+                                            <td className="px-6 py-4 text-left text-sm text-gray-500">{formatNumber(Number(item.Harga_Awal))}</td>
+                                            <td className="px-6 py-4 text-left text-sm text-gray-500">{formatNumber(Number(item.Jumlah))}</td>
+                                            <td className="px-6 py-4 text-left text-sm text-gray-500">{item.Keterangan}</td>
+                                            <td className="px-6 py-4 text-left text-sm text-gray-500">
+                                                <button onClick={() => { setEditPopUp(true); setEditFormData(item); }} className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
+                                                <button onClick={() => handlePopup(item.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    {popUp && <PopUpForm />}
-                    {popUp && <PopUpEdit />}
                 </main>
             </div>
             <Footer />
+            {popUp && <PopUpForm />}
+            {editPopUp && <PopUpEdit />}
         </div>
     );
 };

@@ -1,13 +1,14 @@
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import bgservice from "../../assets/images/bg-service.png"
-import React, { useState } from 'react';
+import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect,  } from "react";
 import Swal from 'sweetalert2';
-
+import axios from "axios";
 
 const RincianAnggaran = () => {
     const [popUp, setPopUp] = useState(false);
-
+    const [dataRC, setDataRc] = useState([]);
     const handlePopUp = () => {
         Swal.fire({
             title: "Success!",
@@ -16,6 +17,38 @@ const RincianAnggaran = () => {
         });
         setPopUp(false);
     }
+    const navigate = useNavigate(); // Initialize navigate
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const urlApiENV = import.meta.env.VITE_API_URL;
+                const url = `${urlApiENV}/api/rincian`;
+                console.log("check url", url);
+
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    navigate("/login"); // Redirect to login if no token found
+                    return;
+                }
+
+                const dataResponse = await axios.get(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                console.log("check dataResponse", dataResponse.data.data);
+                setDataRc(Array.isArray(dataResponse.data.data) ? dataResponse.data.data : []);
+                // setLoading(false);
+            } catch (err) {
+                console.error("Error during fetch:", err.response ? err.response.data : err.message);
+                setError(err);
+                // setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [navigate]);
 
     const PopUpForm = () => {
         return (
@@ -32,6 +65,9 @@ const RincianAnggaran = () => {
         )
     }
 
+    const formatNumber = (number) => {
+        return number.toLocaleString('id-ID');
+    }
 
     return (
         <>
@@ -54,54 +90,18 @@ const RincianAnggaran = () => {
                                 </tr>
                             </thead>
                             <tbody className="text-gray-800 text-base">
-                                <tr>
-                                    <td className="border px-4 py-2">1</td>
-                                    <td className="border px-4 py-2">Catering Prasmanan</td>
-                                    <td className="border px-4 py-2">100 Porsi</td>
-                                    <td className="border px-4 py-2">Rp35.000/porsi</td>
-                                    <td className="border px-4 py-2">Rp3.500.000</td>
-                                    <td className="border px-4 py-2">Konsumsi tamu</td>
-                                </tr>
-                                <tr>
-                                    <td className="border px-4 py-2">2</td>
-                                    <td className="border px-4 py-2">Souvenir Tamu</td>
-                                    <td className="border px-4 py-2">100 pcs</td>
-                                    <td className="border px-4 py-2">Rp10.000/pcs</td>
-                                    <td className="border px-4 py-2">Rp1.000.000</td>
-                                    <td className="border px-4 py-2">Souvenir berupa keychain</td>
-                                </tr>
-                                <tr>
-                                    <td className="border px-4 py-2">3</td>
-                                    <td className="border px-4 py-2">Sewa Venue</td>
-                                    <td className="border px-4 py-2">1 Auditorium</td>
-                                    <td className="border px-4 py-2">Rp5.000.000</td>
-                                    <td className="border px-4 py-2">Rp5.000.000</td>
-                                    <td className="border px-4 py-2">Include kursi dan meja</td>
-                                </tr>
-                                <tr>
-                                    <td className="border px-4 py-2">4</td>
-                                    <td className="border px-4 py-2">Taplak Meja Makan & Akad</td>
-                                    <td className="border px-4 py-2">1 Paket</td>
-                                    <td className="border px-4 py-2">Rp500.000</td>
-                                    <td className="border px-4 py-2">Rp500.000</td>
-                                    <td className="border px-4 py-2">Sewa harian</td>
-                                </tr>
-                                <tr>
-                                    <td className="border px-4 py-2">5</td>
-                                    <td className="border px-4 py-2">Dokumentasi</td>
-                                    <td className="border px-4 py-2">1 Paket</td>
-                                    <td className="border px-4 py-2">Rp10.000.000</td>
-                                    <td className="border px-4 py-2">Rp10.000.000</td>
-                                    <td className="border px-4 py-2">Album, softcopy dokumentasi (foto & video)</td>
-                                </tr>
-                                <tr>
-                                    <td className="border px-4 py-2">6</td>
-                                    <td className="border px-4 py-2">Dekorasi</td>
-                                    <td className="border px-4 py-2">1 Set</td>
-                                    <td className="border px-4 py-2">Rp5.000.000</td>
-                                    <td className="border px-4 py-2">Rp5.000.000</td>
-                                    <td className="border px-4 py-2">Dekorasi photobooth, pelaminan, dsb</td>
-                                </tr>
+                                {Array.isArray(dataRC) && dataRC.map((item, index) => (
+                                        <tr key={item.id}>
+                                            <td className="border px-4 py-2">{index + 1}</td>
+                                            <td className="border px-4 py-2">{item.Uraian}</td>
+                                            <td className="border px-4 py-2">{item.Vol}</td>
+                                            <td className="border px-4 py-2">{formatNumber(Number(item.Harga_Awal))}</td>
+                                            <td className="border px-4 py-2">{formatNumber(Number(item.Jumlah))}</td>
+                                            <td className="border px-4 py-2">{item.Keterangan}</td>
+                                          
+                                        </tr>
+                                    ))}
+                          
                             </tbody>
                         </table>
                     </div>
