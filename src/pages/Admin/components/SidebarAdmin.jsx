@@ -27,6 +27,8 @@ const SidebarAdmin = () => {
                     text: "Kamu telah keluar dari akun.",
                     icon: "success"
                 });
+                localStorage.removeItem("token");
+                localStorage.removeItem("users");
                 navigate("/")
             }
         });

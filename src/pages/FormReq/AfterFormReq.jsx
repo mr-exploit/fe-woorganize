@@ -1,34 +1,53 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import Swal from 'sweetalert2';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
+import PopUpForm from './PopUpForm';
 
 const AfterFormReq = () => {
     const [popUp, setPopUp] = useState(false);
+    const [dataForm, setDataForm] = useState(null);
+    const { id } = useParams();
+    const navigate = useNavigate();
 
-    const handlePopUp = () => {
-        Swal.fire({
-            title: "Success!",
-            text: "Perubahan akan segera diproses oleh kami!",
-            icon: "success"
-        });
-        setPopUp(false)
-    }
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const urlApiENV = import.meta.env.VITE_API_URL;
+                const url = `${urlApiENV}/api/form/${id}`;
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    navigate('/login');
+                    return;
+                }
 
-    const PopUpForm = () => {
-        return (
-            <div className='absolute left-0 right-0 top-0 bottom-0 bg-black bg-opacity-70 h-full flex justify-center items-center'>
-                <div className='bg-neutral1 p-8 rounded-[8px] w-[772px] flex flex-col gap-5'>
-                    <p className='font-medium text-neutral5'>Apa yang ingin anda ubah?</p>
-                    <textarea className='rounded-xl h-[160px] mb-2' name="" id="" placeholder='Tuliskan perubahan apa yang Anda inginkan!'></textarea>
-                    <div className='flex justify-end gap-2'>
-                        <button className='bg-neutral2 px-[18px] py-[9px] rounded-md text-neutral5 font-semibold' onClick={() => { setPopUp(false) }}>Batal</button>
-                        <button onClick={handlePopUp} className='bg-primary1 px-[18px] py-[9px] rounded-md text-primary5 font-semibold'>Simpan</button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+                const response = await axios.get(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                console.log("check data", response.data.data[0])
+                setDataForm(response.data.data[0]);
+            } catch (err) {
+                console.error("Error during fetch:", err.response ? err.response.data : err.message);
+                Swal.fire({
+                    title: "Error!",
+                    text: "Data tidak ditemukan!",
+                    icon: "error"
+                });
+            }
+        };
+
+        fetchData();
+    }, [id, navigate]);
+
+    const handlePopUpClose = () => {
+        setPopUp(false);
+    };
+   
+   
     return (
         <div className='relative'>
             <Header />
@@ -41,34 +60,40 @@ const AfterFormReq = () => {
                 <div className="w-full max-w-[1289px] px-4 mb-12">
                     <table className="w-full border-collapse rounded-t-lg overflow-hidden">
                         <tbody>
-                            <tr>
-                                <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">First Name</td>
-                                <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">John</td> {/* hasil input dari pengguna */}
-                            </tr>
-                            <tr>
-                                <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Last Name</td>
-                                <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Doe</td> {/* hasil input dari pengguna */}
-                            </tr>
-                            <tr>
-                                <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Email</td>
-                                <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">john.doe@example.com</td> {/* hasil input dari pengguna */}
-                            </tr>
-                            <tr>
-                                <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Phone Number</td>
-                                <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">0812-3456-7890</td> {/* hasil input dari pengguna */}
-                            </tr>
-                            <tr>
-                                <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Planning Concept</td>
-                                <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Saya ingin konsep acara seperti disney, dengan budget 1.5M dan hari-H sekitar bulan agustus akhir. Dengan tamu kisaran 500 tamu</td> {/* hasil input dari pengguna */}
-                            </tr>
+                            {dataForm ? (
+                                <>
+                                    <tr>
+                                        <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">First Name</td>
+                                        <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">{dataForm.Nama_Depan}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Last Name</td>
+                                        <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">{dataForm.Nama_Belakang}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Email</td>
+                                        <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">{dataForm.Email}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Phone Number</td>
+                                        <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">{dataForm.No_HP}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">Planning Concept</td>
+                                        <td className="text-neutral-700 text-[18px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400">{dataForm.Konsep}</td>
+                                    </tr>
+                                </>
+                            ) : (
+                                <tr>
+                                    <td colSpan="2" className="text-neutral-700 text-[21px] font-medium font-Switzer leading-normal tracking-wide p-4 border border-neutral-400 text-center">Loading...</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
                 <div className="w-full max-w-[1289px] px-4 mb-12 flex justify-end">
                     <button
-                        onClick={() => {
-                            setPopUp(true)
-                        }}
+                        onClick={() => setPopUp(true)}
                         style={{ backgroundColor: '#A79277' }}
                         className="text-white text-[17px] font-medium font-Switzer leading-normal tracking-wide rounded-[8px] px-6 py-3"
                     >
@@ -76,9 +101,7 @@ const AfterFormReq = () => {
                     </button>
                 </div>
             </div>
-            {
-                popUp && <PopUpForm />
-            }
+            {popUp && <PopUpForm handleClose={handlePopUpClose} />}
             <Footer />
         </div>
     );

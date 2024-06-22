@@ -31,6 +31,8 @@ const Setting = () => {
                     text: "Your file has been deleted.",
                     icon: "success"
                 });
+                localStorage.removeItem('users')
+                localStorage.removeItem('token')
                 navigate('/')
             }
         });

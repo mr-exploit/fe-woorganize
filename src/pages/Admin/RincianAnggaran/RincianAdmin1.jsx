@@ -3,14 +3,14 @@ import axios from "axios";
 import NavbarAdmin from '../components/NavbarAdmin';
 import SidebarAdmin from '../components/SidebarAdmin';
 import Footer from '../../../components/Footer';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 const RincianAdmin1 =  () => {
 
     const [dataRC, setDataRc] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
+    const navigate = useNavigate(); 
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -19,8 +19,17 @@ const RincianAdmin1 =  () => {
                 console.log("check url", url);
 
                 const token = localStorage.getItem("token");
+                const userString = localStorage.getItem("users");
+                const user = JSON.parse(userString); 
+     
                 if (!token) {
-                    throw new Error("No token found");
+                    navigate("/login");
+                    return;
+                }
+
+                if (!user || user.role !== "admin") {
+                    navigate("/login");
+                    return;
                 }
 
                 const dataResponse = await axios.get(url, {

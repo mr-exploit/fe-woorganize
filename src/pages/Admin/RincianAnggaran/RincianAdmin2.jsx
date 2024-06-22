@@ -4,7 +4,9 @@ import NavbarAdmin from '../components/NavbarAdmin';
 import SidebarAdmin from '../components/SidebarAdmin';
 import Footer from '../../../components/Footer';
 import Swal from 'sweetalert2';
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import PopUpForm from "./PopUpAddForm";
+import PopUpEdit from "./PopUpEditForm";
 
 const RincianAdmin2 = () => {
     const [popUp, setPopUp] = useState(false);
@@ -12,21 +14,14 @@ const RincianAdmin2 = () => {
     const [dataRC, setDataRc] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [formData, setFormData] = useState({
-        Uraian: '',
-        Vol: '',
-        Harga_Awal: '',
-        Jumlah: '',
-        Keterangan: ''
-    });
     const [editFormData, setEditFormData] = useState(null);
-    const navigate = useNavigate(); // Initialize navigate
+    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const urlApiENV = import.meta.env.VITE_API_URL;
                 const url = `${urlApiENV}/api/rincian`;
-                console.log("check url", url);
 
                 const token = localStorage.getItem("token");
                 if (!token) {
@@ -40,86 +35,42 @@ const RincianAdmin2 = () => {
                     },
                 });
 
-                console.log("check dataResponse", dataResponse.data.data);
                 setDataRc(Array.isArray(dataResponse.data.data) ? dataResponse.data.data : []);
                 setLoading(false);
             } catch (err) {
-                console.error("Error during fetch:", err.response ? err.response.data : err.message);
                 setError(err);
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [navigate, setDataRc]);
+    }, [navigate]);
 
-    if (error) return <div>Error: {error.message}</div>;
-    
-    const handlePopUp = () => {
-        Swal.fire({
-            title: "Success!",
-            text: "Data has been successfully saved!",
-            icon: "success"
-        });
+    const handleAddData = (newData) => {
+        setDataRc([...dataRC, newData]);
         setPopUp(false);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const urlApiENV = import.meta.env.VITE_API_URL;
-            const url = `${urlApiENV}/api/rincian`;
-            const token = localStorage.getItem("token");
+    const handleUpdateData = (updatedData) => {
+    
+        // Convert updatedData.id to a number
+        const updatedDataWithNumberId = {
+            ...updatedData,
+            id: Number(updatedData.id),
+        };
 
-            const response = await axios.post(url, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            setDataRc([...dataRC, response.data.data]);
-            setFormData({ Uraian: '', Vol: '', Harga_Awal: '', Jumlah: '', Keterangan: '' });
-            handlePopUp();
-        } catch (err) {
-           
-            const error = `Error during submit: ${err.response[0].msg ? err.response.data : err.msg}`
-            Swal.fire({
-                title: "Oops...",
-                text: error,
-                icon: "error"
-            });
-        }
+        const updatedList = dataRC.map(item => {
+            if (item.id === updatedDataWithNumberId.id) {
+                return updatedDataWithNumberId;
+            }
+            return item;
+        });
+    
+        setDataRc(updatedList);
+        setEditPopUp(false);
     };
-
-    const handleEdit = async (e) => {
-        e.preventDefault();
-        try {
-            const urlApiENV = import.meta.env.VITE_API_URL;
-            const url = `${urlApiENV}/api/rincian/${editFormData.id}`;
-            const token = localStorage.getItem("token");
-
-            const response = await axios.put(url, editFormData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const updatedData = dataRC.map(item => item.id === response.data.data.id ? response.data.data : item);
-            setDataRc(updatedData);
-            setEditFormData(null);
-            handlePopUp();
-        } catch (err) {
-            console.error("Error during edit:", err.response ? err.response.data : err.msg);
-            const error = `Error during edit: ${err.response ? err.response.data : err.msg}`
-            Swal.fire({
-                title: "Oops...",
-                text: error,
-                icon: "error"
-            });
-        }
-    };
-
-    const handlePopup = (id) => {
+    
+    const handleDelete = (id) => {
         Swal.fire({
             title: "Are you sure?",
             text: "You won't be able to revert this!",
@@ -148,71 +99,22 @@ const RincianAdmin2 = () => {
                         icon: "success"
                     });
                 } catch (err) {
-                    console.error("Error during delete:", err.response ? err.response.data : err.msg);
-                    const error = `Error during delete: ${err.response ? err.response.data : err.msg}`
                     Swal.fire({
                         title: "Oops...",
-                        text: error,
+                        text: err.response ? err.response.data.msg : err.msg,
                         icon: "error"
                     });
                 }
             }
         });
-    }
+    };
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error.message}</div>;
 
     const formatNumber = (number) => {
         return number.toLocaleString('id-ID');
-    }
-
-const PopUpForm = () => (
-        <div className='z-30 absolute left-0 right-0 top-0 bottom-0 bg-black bg-opacity-70 h-full flex justify-center items-center'>
-            <form onSubmit={handleSubmit} className='bg-white p-12 rounded-xl w-[700px]'>
-                <div className='flex flex-col gap-5'>
-                    {Object.keys(formData).map((field) => (
-                        <div className='flex flex-col gap-[10px]' key={field}>
-                            <label htmlFor={field} className='font-semibold text-gray-700'>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
-                            <input
-                                name={field}
-                                type="text"
-                                className='rounded-[8px] h-[50px]'
-                                value={formData[field]}
-                                onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-                            />
-                        </div>
-                    ))}
-                </div>
-                <div className='flex gap-4 mt-[50px]'>
-                    <button type='submit' className='px-5 py-3 bg-neutral4 text-white rounded-[8px] cursor-pointer items-center'>Simpan</button>
-                    <button type="button" className='bg-neutral2 px-5 py-3 rounded-[8px] text-neutral5 font-semibold' onClick={() => setPopUp(false)}>Batal</button>
-                </div>
-            </form>
-        </div>
-    );
-
-    const PopUpEdit = () => (
-        <div className='z-30 absolute left-0 right-0 top-0 bottom-0 bg-black bg-opacity-70 h-full flex justify-center items-center'>
-            <form onSubmit={handleEdit} className='bg-white p-12 rounded-xl w-[700px]'>
-                <div className='flex flex-col gap-5'>
-                    {Object.keys(editFormData || {}).map((field) => (
-                        <div className='flex flex-col gap-[10px]' key={field}>
-                            <label htmlFor={field} className='font-semibold text-gray-700'>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
-                            <input
-                                name={field}
-                                type="text"
-                                className='rounded-[8px] h-[50px]'
-                                value={editFormData[field]}
-                                onChange={(e) => setEditFormData({ ...editFormData, [field]: e.target.value })}
-                            />
-                        </div>
-                    ))}
-                </div>
-                <div className='flex gap-4 mt-[50px]'>
-                    <button type='submit' className='px-5 py-3 bg-neutral4 text-white rounded-[8px] cursor-pointer items-center'>Ubah</button>
-                    <button type="button" className='bg-neutral2 px-5 py-3 rounded-[8px] text-neutral5 font-semibold' onClick={() => setEditPopUp(false)}>Batal</button>
-                </div>
-            </form>
-        </div>
-    );
+    };
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-100">
@@ -250,8 +152,16 @@ const PopUpForm = () => (
                                             <td className="px-6 py-4 text-left text-sm text-gray-500">{formatNumber(Number(item.Jumlah))}</td>
                                             <td className="px-6 py-4 text-left text-sm text-gray-500">{item.Keterangan}</td>
                                             <td className="px-6 py-4 text-left text-sm text-gray-500">
-                                                <button onClick={() => { setEditPopUp(true); setEditFormData(item); }} className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
-                                                <button onClick={() => handlePopup(item.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                                                <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900">
+                                                    <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M1.5 4.99984H3.16667M3.16667 4.99984H16.5M3.16667 4.99984V16.6665C3.16667 17.1085 3.34226 17.5325 3.65482 17.845C3.96738 18.1576 4.39131 18.3332 4.83333 18.3332H13.1667C13.6087 18.3332 14.0326 18.1576 14.3452 17.845C14.6577 17.5325 14.8333 17.1085 14.8333 16.6665V4.99984H3.16667ZM5.66667 4.99984V3.33317C5.66667 2.89114 5.84226 2.46722 6.15482 2.15466C6.46738 1.8421 6.89131 1.6665 7.33333 1.6665H10.6667C11.1087 1.6665 11.5326 1.8421 11.8452 2.15466C12.1577 2.46722 12.3333 2.89114 12.3333 3.33317V4.99984M7.33333 9.1665V14.1665M10.6667 9.1665V14.1665" stroke="#4A5568" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                </button>
+                                            <button onClick={() => { setEditPopUp(true); setEditFormData(item); }} className="text-blue-600 hover:text-blue-900 mr-4"> 
+                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fillRule="evenodd" clipRule="evenodd" d="M15.834 0.83301C15.3895 0.388537 14.7848 0.144043 14.1487 0.144043C13.5126 0.144043 12.908 0.388537 12.4635 0.83301L1.66602 11.6305V15.833H5.86852L16.666 5.03551C17.1105 4.59104 17.355 3.98642 17.355 3.3503C17.355 2.71418 17.1105 2.10956 16.666 1.66509L15.834 0.83301ZM12.6673 2.63052L15.355 5.31802L13.4623 7.21076L10.7748 4.52326L12.6673 2.63052ZM2.49935 13.9645V12.0718L9.11135 5.45977L11.799 8.14727L5.18697 14.7593H3.29435H2.49935ZM1.66602 18.333H18.3327V19.9997H1.66602V18.333Z" fill="#4A5568" />
+                                                </svg>
+                                            </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -262,8 +172,8 @@ const PopUpForm = () => (
                 </main>
             </div>
             <Footer />
-            {popUp && <PopUpForm />}
-            {editPopUp && <PopUpEdit />}
+            {popUp && <PopUpForm onClose={() => setPopUp(false)} onAddData={handleAddData} />}
+            {editPopUp && <PopUpEdit onClose={() => setEditPopUp(false)} onUpdateData={handleUpdateData} formData={editFormData} />}
         </div>
     );
 };
