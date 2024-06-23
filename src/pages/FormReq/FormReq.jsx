@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import { data } from "autoprefixer";
 
 const Request = () => {
     const [nama_depan, setNamaDepan] = useState('');
@@ -16,18 +15,50 @@ const Request = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
     const DataUser = JSON.parse(localStorage.getItem("users"));
+    const userId = DataUser ? DataUser.userid : null;
 
-    
+    useEffect(() => {
+        if (!token) {
+            navigate("/login");
+            return;
+        }
 
-    if (!token) {
-        navigate("/login");
-        return;
-    }
+        if (!DataUser || DataUser.role !== "user") {
+            navigate("/");
+            return;
+        }
 
-    if(DataUser.role !== "user") {
-        navigate("/");
-        return;
-    }
+        const fetchUserForms = async () => {
+            try {
+                const response = await axios.get(`/api/user/form/${userId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (response.data.length > 1) {
+                    
+                    Swal.fire({
+                        title: "Oops!",
+                        text: "sudah pernah isi Form Request sebelumnya, silahkan cek di menu Form Request",
+                        icon: "error",
+                        showConfirmButton: true,
+                    }).then((result) => {
+                        if(result.isConfirmed){
+                            navigate("/");
+                        }
+                    });
+                    
+                    return;
+                }
+            } catch (error) {
+                console.error('Error fetching user forms:', error);
+                // Handle error fetching data
+            }
+        };
+
+        fetchUserForms();
+    }, [token, navigate, DataUser, userId]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();

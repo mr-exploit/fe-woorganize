@@ -28,11 +28,12 @@ const Dashboard1 = () => {
 
         const fetchFormData = async () => {
             try {
-                const response = await axios.get(`${urlApiENV}/api/admin/form`, {
+                const response = await axios.get(`${urlApiENV}/api/admin/concept`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
+                console.log("check data response", response.data.data)
                 setFormCon(response.data.data);
             } catch (error) {
                 console.error('Error fetching form data:', error);

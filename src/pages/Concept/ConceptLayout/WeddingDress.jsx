@@ -2,6 +2,7 @@ import React from 'react'
 import { Carousel } from 'flowbite-react'
 
 const WeddingDress = () => {
+    
     return (
         <>
             <section className='flex flex-col mt-[80px] bg-primary1 items-center p-auto'>
