@@ -1,8 +1,52 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const DetailTabel = () => {
     const [popUp, setPopUp] = useState(false);
+    const [dataKonsep, setDataKonsep] = useState({});
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const token = localStorage.getItem('token');
+    const dataUser = JSON.parse(localStorage.getItem('users'));
+
+    useEffect(() => {
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+        if (!dataUser || dataUser.role !== 'admin') {
+            navigate('/');
+            return;
+        }
+
+        const fetchData = async () => {
+            try {
+                const urlApiENV = import.meta.env.VITE_API_URL;
+                const url = `${urlApiENV}/api/admin/concept/${id}`;
+
+                const response = await axios.get(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                setDataKonsep(response.data.data[0]);
+            } catch (err) {
+                console.error("Error during fetch:", err.response ? err.response.data : err.message);
+                Swal.fire({
+                    title: "Error!",
+                    text: "Data konsep tidak ditemukan!",
+                    icon: "error",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            }
+        };
+
+        fetchData();
+    }, [id, navigate, token]);
 
     const handlePopUp = () => {
         Swal.fire({
@@ -40,7 +84,7 @@ const DetailTabel = () => {
             <tbody className="bg-white">
                 <tr className='font-switzer'>
                     <td className="py-5 px-1"></td>
-                    <td className="py-5">Dalam perayaan pernikahan, kami telah memilih konsep yang menggabung...</td>
+                    <td className="py-5">{dataKonsep.Detail_Acara}</td>
                     <td className="py-5 text-center">
                         <button onClick={() => {setPopUp(true);}}>
                             <img src="../src/assets/icons/edit-icon.svg" alt="edit" />

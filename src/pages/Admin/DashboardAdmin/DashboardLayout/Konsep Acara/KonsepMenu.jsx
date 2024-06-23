@@ -1,7 +1,9 @@
-import React from 'react'
+
 import KonsepTable from './KonsepTable';
 
 const KonsepMenu = () => {
+   
+
     return (
         <div className="p-6 bg-white border rounded-lg shadow-md m-3">
             <div className='flex flex-row'>
