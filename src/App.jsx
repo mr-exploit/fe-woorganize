@@ -39,16 +39,16 @@ function App() {
         <Route path="/concept" element={<Concept />}></Route>
         <Route path="/schedule" element={<Schedule />}></Route>
         <Route path="/RA1" element={<RincianAdmin />}></Route>
-        <Route path="/RA2" element={<RincianAdmin2 />}></Route>
+        <Route path="/RA2/:id" element={<RincianAdmin2 />}></Route>
         <Route path="/fa1" element={<FormA1 />}></Route>
         <Route path="/fa2/:id" element={<FormA2 />}></Route>
         <Route path='admin/profile' element={<AdminProfile />} />
         <Route path='admin/setting' element={<AdminSetting />} />
         <Route path='admin/profile/edit/:id' element={<AdminEditProfile />} />
         <Route path="/dashboard/concept1" element={<Dashboard1 />}></Route>
-        <Route path="/dashboard/concept2" element={<Dashboard2 />}></Route>
+        <Route path="/dashboard/concept2/:id" element={<Dashboard2 />}></Route>
         <Route path="/dashboard/schedule1" element={<ScheduleAdmin1 />}></Route>
-        <Route path="/dashboard/schedule2" element={<ScheduleAdmin2 />}></Route>
+        <Route path="/dashboard/schedule2/:id" element={<ScheduleAdmin2 />}></Route>
       </Routes>
     </>
   )

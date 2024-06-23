@@ -20,11 +20,7 @@ const Login = () => {
             });
 
             const token = response.data.Authorization;
-            // const users = [response.data.data.id, response.data.data.username, response.data.data.email];
-            // localStorage.setItem("token", token);
-            // localStorage.setItem("users", JSON.stringify(users));
-
-     
+          
             try {
                 const url = urlApiENV + "/user/" + response.data.data.id;
                 const userResponse = await axios.get(url, {

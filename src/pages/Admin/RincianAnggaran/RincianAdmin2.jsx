@@ -4,7 +4,7 @@ import NavbarAdmin from '../components/NavbarAdmin';
 import SidebarAdmin from '../components/SidebarAdmin';
 import Footer from '../../../components/Footer';
 import Swal from 'sweetalert2';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import PopUpForm from "./PopUpAddForm";
 import PopUpEdit from "./PopUpEditForm";
 
@@ -16,12 +16,14 @@ const RincianAdmin2 = () => {
     const [error, setError] = useState(null);
     const [editFormData, setEditFormData] = useState(null);
     const navigate = useNavigate();
+    const {id} = useParams();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
+                
                 const urlApiENV = import.meta.env.VITE_API_URL;
-                const url = `${urlApiENV}/api/rincian`;
+                const url = `${urlApiENV}/api/rincian/${id}`;
 
                 const token = localStorage.getItem("token");
                 if (!token) {
@@ -40,6 +42,13 @@ const RincianAdmin2 = () => {
             } catch (err) {
                 setError(err);
                 setLoading(false);
+                Swal.fire({
+                    title: "Oops!",
+                    text: `${error.response ? error.response.data.msg : error.message}`,
+                    icon: "error",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
             }
         };
 
@@ -109,8 +118,8 @@ const RincianAdmin2 = () => {
         });
     };
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error.message}</div>;
+    // if (loading) return <div>Loading...</div>;
+    // if (error) return <div>Error: {error.message}</div>;
 
     const formatNumber = (number) => {
         return number.toLocaleString('id-ID');
@@ -152,16 +161,17 @@ const RincianAdmin2 = () => {
                                             <td className="px-6 py-4 text-left text-sm text-gray-500">{formatNumber(Number(item.Jumlah))}</td>
                                             <td className="px-6 py-4 text-left text-sm text-gray-500">{item.Keterangan}</td>
                                             <td className="px-6 py-4 text-left text-sm text-gray-500">
-                                                <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900">
-                                                    <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M1.5 4.99984H3.16667M3.16667 4.99984H16.5M3.16667 4.99984V16.6665C3.16667 17.1085 3.34226 17.5325 3.65482 17.845C3.96738 18.1576 4.39131 18.3332 4.83333 18.3332H13.1667C13.6087 18.3332 14.0326 18.1576 14.3452 17.845C14.6577 17.5325 14.8333 17.1085 14.8333 16.6665V4.99984H3.16667ZM5.66667 4.99984V3.33317C5.66667 2.89114 5.84226 2.46722 6.15482 2.15466C6.46738 1.8421 6.89131 1.6665 7.33333 1.6665H10.6667C11.1087 1.6665 11.5326 1.8421 11.8452 2.15466C12.1577 2.46722 12.3333 2.89114 12.3333 3.33317V4.99984M7.33333 9.1665V14.1665M10.6667 9.1665V14.1665" stroke="#4A5568" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                </button>
-                                            <button onClick={() => { setEditPopUp(true); setEditFormData(item); }} className="text-blue-600 hover:text-blue-900 mr-4"> 
-                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path fillRule="evenodd" clipRule="evenodd" d="M15.834 0.83301C15.3895 0.388537 14.7848 0.144043 14.1487 0.144043C13.5126 0.144043 12.908 0.388537 12.4635 0.83301L1.66602 11.6305V15.833H5.86852L16.666 5.03551C17.1105 4.59104 17.355 3.98642 17.355 3.3503C17.355 2.71418 17.1105 2.10956 16.666 1.66509L15.834 0.83301ZM12.6673 2.63052L15.355 5.31802L13.4623 7.21076L10.7748 4.52326L12.6673 2.63052ZM2.49935 13.9645V12.0718L9.11135 5.45977L11.799 8.14727L5.18697 14.7593H3.29435H2.49935ZM1.66602 18.333H18.3327V19.9997H1.66602V18.333Z" fill="#4A5568" />
-                                                </svg>
-                                            </button>
+                                            <button onClick={() => handleDelete(item.id)}  className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300">
+                                    <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M1.5 4.99984H3.16667M3.16667 4.99984H16.5M3.16667 4.99984V16.6665C3.16667 17.1085 3.34226 17.5325 3.65482 17.845C3.96738 18.1576 4.39131 18.3332 4.83333 18.3332H13.1667C13.6087 18.3332 14.0326 18.1576 14.3452 17.845C14.6577 17.5325 14.8333 17.1085 14.8333 16.6665V4.99984H3.16667ZM5.66667 4.99984V3.33317C5.66667 2.89114 5.84226 2.46722 6.15482 2.15466C6.46738 1.8421 6.89131 1.6665 7.33333 1.6665H10.6667C11.1087 1.6665 11.5326 1.8421 11.8452 2.15466C12.1577 2.46722 12.3333 2.89114 12.3333 3.33317V4.99984M7.33333 9.1665V14.1665M10.6667 9.1665V14.1665" stroke="#4A5568" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </button>
+                                    <button onClick={() => { setEditPopUp(true); setEditFormData(item);}} className="p-2 ms-2 rounded-lg bg-gray-200 hover:bg-gray-300">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M14.1665 2.49993C14.3854 2.28106 14.6452 2.10744 14.9312 1.98899C15.2171 1.87054 15.5236 1.80957 15.8332 1.80957C16.1427 1.80957 16.4492 1.87054 16.7352 1.98899C17.0211 2.10744 17.281 2.28106 17.4998 2.49993C17.7187 2.7188 17.8923 2.97863 18.0108 3.2646C18.1292 3.55057 18.1902 3.85706 18.1902 4.16659C18.1902 4.47612 18.1292 4.78262 18.0108 5.06859C17.8923 5.35455 17.7187 5.61439 17.4998 5.83326L6.24984 17.0833L1.6665 18.3333L2.9165 13.7499L14.1665 2.49993Z" stroke="#4A5568" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        
+                                    </button>
                                             </td>
                                         </tr>
                                     ))}

@@ -55,6 +55,7 @@ const PopUpEdit = ({ onClose, onUpdateData, formData: initialData }) => {
                                 className='rounded-[8px] h-[50px]'
                                 value={formData[field]}
                                 onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                                readOnly={field === 'id_form' || field === 'id'}
                             />
                         </div>
                     ))}

@@ -1,10 +1,53 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react';
 import NavbarAdmin from '../components/NavbarAdmin';
 import SidebarAdmin from '../components/SidebarAdmin';
 import Footer from '../../../components/Footer';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const FormA1 = () => {
+    const [formData, setFormData] = useState([]);
+    const urlApiENV = import.meta.env.VITE_API_URL;
+    const token = localStorage.getItem("token");
+    const DataUser = JSON.parse(localStorage.getItem("users"));
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+    
+        if (DataUser.role !== "admin") {
+            navigate("/");
+            return;
+        }
+
+        const fetchFormData = async () => {
+            try {
+                const response = await axios.get(`${urlApiENV}/api/admin/form`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                setFormData(response.data.data);
+            } catch (error) {
+                console.error('Error fetching form data:', error);
+                Swal.fire({
+                    title: "Oops!",
+                    text: `${error.response ? error.response.data.msg : error.message}`,
+                    icon: "error",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        };
+
+        fetchFormData();
+
+    }, [urlApiENV, navigate, token, DataUser.role]);
+
     return (
         <div className="min-h-screen flex flex-col">
             <NavbarAdmin />
@@ -24,22 +67,17 @@ const FormA1 = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="border-t">
-                                    <td className="px-6 py-4 text-gray-900 text-base">John Doe</td>
-                                    <td className="px-6 py-4 text-gray-800 text-base">Perumahan X Blok A9 No.79</td>
-                                    <td className="px-6 py-4 text-gray-800 text-base">+62-365-7215-1749</td>
-                                    <td className="px-6 py-4">
-                                        <Link to="/fa2" className="bg-zinc-500 text-white px-5 py-2 rounded-lg hover:bg-zinc-600 focus:outline-none focus:ring-2 focus:ring-opacity-75">Details</Link>
-                                    </td>
-                                </tr>
-                                <tr className="border-t">
-                                    <td className="px-6 py-4 text-gray-900 text-base">Jane Smith</td>
-                                    <td className="px-6 py-4 text-gray-800 text-base">Perumahan Y Blok B10 No.45</td>
-                                    <td className="px-6 py-4 text-gray-800 text-base">+62-134-7215-5734</td>
-                                    <td className="px-6 py-4">
-                                        <Link to="/fa2" className="bg-zinc-500 text-white px-5 py-2 rounded-lg hover:bg-zinc-600 focus:outline-none focus:ring-2 focus:ring-opacity-75">Details</Link>
-                                    </td>
-                                </tr>
+                                {formData.map((data, index) => (
+                                    <tr key={data.id} className="border-t">
+                                        <td className="px-6 py-4 text-gray-900 text-base">{data.nama}</td>
+                                        <td className="px-6 py-4 text-gray-800 text-base">{data.alamat}</td>
+                                        <td className="px-6 py-4 text-gray-800 text-base">{data.no_hp}</td>
+                                        <td className="px-6 py-4">
+                                            <Link to={`/fa2/${data.id}`} className="bg-zinc-500 text-white px-5 py-2 rounded-lg hover:bg-zinc-600 focus:outline-none focus:ring-2 focus:ring-opacity-75">Details</Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                               
                             </tbody>
                         </table>
                     </div>

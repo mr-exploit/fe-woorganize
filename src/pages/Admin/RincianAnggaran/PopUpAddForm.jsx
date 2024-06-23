@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Swal from 'sweetalert2';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const PopUpForm = ({ onClose, onAddData }) => {
+
+    const {id} = useParams();
+
     const [formData, setFormData] = useState({
+        id_form: id,
         Uraian: '',
         Vol: '',
         Harga_Awal: '',
@@ -12,7 +16,7 @@ const PopUpForm = ({ onClose, onAddData }) => {
         Keterangan: ''
     });
 
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -28,7 +32,7 @@ const PopUpForm = ({ onClose, onAddData }) => {
             });
 
             onAddData(response.data.data);
-            setFormData({ Uraian: '', Vol: '', Harga_Awal: '', Jumlah: '', Keterangan: '' });
+            setFormData({id_form: id, Uraian: '', Vol: '', Harga_Awal: '', Jumlah: '', Keterangan: '' });
             Swal.fire({
                 title: "Success!",
                 text: "Data has been successfully saved!",
@@ -57,6 +61,7 @@ const PopUpForm = ({ onClose, onAddData }) => {
                                 className='rounded-[8px] h-[50px]'
                                 value={formData[field]}
                                 onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                                readOnly={field === 'id_form'}
                             />
                         </div>
                     ))}

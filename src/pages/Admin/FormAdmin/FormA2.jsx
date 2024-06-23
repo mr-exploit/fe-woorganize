@@ -30,7 +30,7 @@ const FormA2 = () => {
             try {
                 const response = await axios.get(`${urlApiENV}/api/admin/form/${id}`, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                        Authorization: `Bearer ${token}`
                     }
                 });
                 setFormData(response.data.data);
@@ -38,8 +38,10 @@ const FormA2 = () => {
                 console.error('Error fetching form data:', error);
                 Swal.fire({
                     title: "Oops!",
-                    text: `${error.response ? error.response.data.error : error.message}`,
-                    icon: "error"
+                    text: `${error.response ? error.response.data.msg : error.message}`,
+                    icon: "error",
+                    showConfirmButton: false,
+                    timer: 1000
                 });
             }
         };
@@ -54,11 +56,13 @@ const FormA2 = () => {
                 setHistoryData(response.data.data);
             } catch (error) {
                 console.error('Error fetching history data:', error);
-                Swal.fire({
-                    title: "Oops!",
-                    text: `${error.response ? error.response.data.error : error.msg }`,
-                    icon: "error"
-                });
+                // Swal.fire({
+                //     title: "Oops!",
+                //     text: `${error.response ? error.response.data.msg : error.data.msg }`,
+                //     icon: "error",
+                //     showConfirmButton: false,
+                //     timer: 1000
+                // });
             }
         };
 

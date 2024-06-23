@@ -5,6 +5,7 @@ import Footer from '../../../components/Footer'
 import SALayout from './SALayout/SALayout'
 
 const ScheduleAdmin2 = () => {
+    
     return (
         <>
         <div className="flex flex-col">
