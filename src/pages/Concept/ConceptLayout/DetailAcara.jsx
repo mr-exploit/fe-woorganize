@@ -1,9 +1,57 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import bgservice from "../../../assets/images/bg-service.png";
 import Swal from 'sweetalert2';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const DetailAcara = () => {
     const [popUp, setPopUp] = useState(false);
+    const [dataKonsep, setDataKonsep] = useState(null);
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const token = localStorage.getItem('token');
+    const dataUser = JSON.parse(localStorage.getItem('users'));
+  
+
+    useEffect(() => {
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        if(dataUser.role !== 'user') {
+            navigate('/');
+            return;
+        }
+        const idUser = dataUser.id;
+        console.log("check idUser", idUser);
+        const fetchData = async () => {
+            try {
+                const urlApiENV = import.meta.env.VITE_API_URL;
+                const url = `${urlApiENV}/api/concept/${idUser}`;
+                
+
+                const response = await axios.get(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                console.log("check data", response.data.data);
+                setDataKonsep(response.data.data[0]);
+            } catch (err) {
+                console.error("Error during fetch:", err.response ? err.response.msg : err.message);
+                Swal.fire({
+                    title: "Error!",
+                    text: "Data konsep tidak ditemukan!",
+                    icon: "error",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        };
+
+        fetchData();
+    }, [id, navigate, token,]);
 
     const handlePopUp = () => {
         Swal.fire({
@@ -16,14 +64,15 @@ const DetailAcara = () => {
 
     const PopUpForm = () => {
         return (
-            <div className="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-70 flex justify-center items-center z-50">                <div className='bg-neutral1 p-8 rounded-[8px] w-[772px] flex flex-col gap-5'>
-                <p className='font-medium text-neutral5'>Apa yang ingin anda ubah?</p>
-                <textarea className='rounded-xl h-[160px] mb-2' placeholder='Tuliskan perubahan apa yang Anda inginkan!'></textarea>
-                <div className='flex justify-end gap-2'>
-                    <button className='bg-neutral2 px-[18px] py-[9px] rounded-md text-neutral5 font-semibold' onClick={() => { setPopUp(false) }}>Batal</button>
-                    <button onClick={handlePopUp} className='bg-primary1 px-[18px] py-[9px] rounded-md text-primary5 font-semibold'>Simpan</button>
+            <div className="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
+                <div className='bg-neutral1 p-8 rounded-[8px] w-[772px] flex flex-col gap-5'>
+                    <p className='font-medium text-neutral5'>Apa yang ingin anda ubah?</p>
+                    <textarea className='rounded-xl h-[160px] mb-2' placeholder='Tuliskan perubahan apa yang Anda inginkan!'></textarea>
+                    <div className='flex justify-end gap-2'>
+                        <button className='bg-neutral2 px-[18px] py-[9px] rounded-md text-neutral5 font-semibold' onClick={() => { setPopUp(false) }}>Batal</button>
+                        <button onClick={handlePopUp} className='bg-primary1 px-[18px] py-[9px] rounded-md text-primary5 font-semibold'>Simpan</button>
+                    </div>
                 </div>
-            </div>
             </div>
         )
     }
@@ -38,13 +87,7 @@ const DetailAcara = () => {
                         <h1 className='text-[42px] font-boska text-neutral4 font-bold'>Detail Acara:</h1>
                         <div>
                             <p className='font-switzer text-neutral3 text-[16px]'>
-                                Dalam perayaan pernikahan, kami telah memilih konsep yang menggabungkan sentuhan elegan dan romantis dengan nuansa alam yang hangat.
-                                Acara akan dilangsungkan di sebuah kebun yang luas, didekorasi dengan rangkaian bunga segar, lampu-lampu hias, dan elemen-elemen kayu yang memberikan sentuhan rustic.
-                                Tema warna kami adalah putih bersih, krem, dan nuansa emas yang hangat, menciptakan atmosfer yang anggun dan berkelas.
-                                Kami akan memulai hari pernikahan kami dengan upacara di bawah tenda dengan latar belakang pemandangan alam yang indah, dihiasi dengan rangkaian bunga segar dan hiasan dedaunan.
-                                <br />
-                                Setelah itu, tamu akan diundang untuk menikmati pesta resepsi di lapangan terbuka, di mana kami akan menyajikan hidangan lezat dari catering terbaik dan menampilkan hiburan live dari band favorit kami.
-                                Detail-detail kecil seperti tempat duduk yang nyaman, meja makan yang indah, dan pencahayaan yang hangat akan menambahkan sentuhan khusus pada perayaan kami. Dengan konsep ini, kami berharap untuk menciptakan pengalaman pernikahan yang tak terlupakan bagi kami dan semua tamu yang hadir.
+                                {dataKonsep ? dataKonsep.Detail_Acara : 'Memuat...'}
                             </p>
                         </div>
                         <div>

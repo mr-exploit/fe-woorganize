@@ -26,7 +26,7 @@ const ClientName = () => {
 
         const fetchFormData = async () => {
             try {
-                const response = await axios.get(`${urlApiENV}/api/concept/${id}`, {
+                const response = await axios.get(`${urlApiENV}/api/admin/concept/${id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

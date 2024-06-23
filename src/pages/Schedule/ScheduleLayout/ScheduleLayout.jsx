@@ -5,6 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const Schedule = () => {
     const [popUp, setPopUp] = useState(false);
@@ -14,7 +15,8 @@ const Schedule = () => {
     const urlApiENV = import.meta.env.VITE_API_URL;
     const token = localStorage.getItem("token");
     const DataUser = JSON.parse(localStorage.getItem("users"));
-  
+    const navigate = useNavigate();
+
     const handlePopUp = () => {
         Swal.fire({
             title: "Success!",
@@ -25,6 +27,14 @@ const Schedule = () => {
     }
 
     useEffect(() => {
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+        if(DataUser.role !== 'user') {
+            navigate('/');
+            return;
+        }
         const fetchScheduleData = async () => {
             try {
                 const response = await axios.get(`${urlApiENV}/api/schedule`, {

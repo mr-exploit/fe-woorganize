@@ -46,7 +46,7 @@ const FormA1 = () => {
 
         fetchFormData();
 
-    }, [urlApiENV, navigate, token, DataUser.role]);
+    }, [urlApiENV, navigate, token]);
 
     return (
         <div className="min-h-screen flex flex-col">
