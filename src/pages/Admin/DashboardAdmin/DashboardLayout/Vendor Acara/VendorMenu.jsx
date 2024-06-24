@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AddVendorButton from './AddVendorButton';
+import PopUpEdit from './AddVendorButton';
 import { Checkbox, Button } from 'flowbite-react';
 import Swal from 'sweetalert2';
 import axios from 'axios';

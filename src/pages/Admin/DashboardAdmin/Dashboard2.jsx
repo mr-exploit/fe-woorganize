@@ -13,14 +13,7 @@ import Swal from 'sweetalert2';
 
 
 const Dashboard2 = () => {
-
-    const handlePopUp = () => {
-        Swal.fire({
-            title: "Success!",
-            text: "Perubahan telah berhasil!",
-            icon: "success"
-        });
-    }
+   
 
     return (
         <>

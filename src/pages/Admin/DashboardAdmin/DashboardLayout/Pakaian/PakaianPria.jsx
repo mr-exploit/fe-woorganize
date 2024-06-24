@@ -1,91 +1,66 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import AddButton from './AddButton';
 import PakaianCard from './PakaianCard';
+import axios from 'axios';
+import Swal from 'sweetalert2';
+import profile from '../../../../../assets/images/profile-medium.png';
 
 const PakaianPria = () => {
-    const pakaianData = [
-        {
-            url:"../src/assets/images/wed-jas3.png",
-            name:"Jas Biru",
-            harga:"Rp. 3.000.000",
-            deskripsi:"Pesona jas unik dengan kain biru dan dasi bisu. Memiliki kesan yang elegan dan...",
-            jenis:"Jas Pria",
-            warna:"Biru",
-            size:"L"
-        },
-        {
-            url:"../src/assets/images/wed-jas2.png",
-            name:"Jas Katun Hitam",
-            harga:"Rp. 4.500.000",
-            deskripsi:"Jas pria berkain katun sehingga lembut dan sangat nyaman dipakai...",
-            jenis:"Jas Pria",
-            warna:"Hitam",
-            size:"L"
-        },
-        {
-            url:"../src/assets/images/wed-jas1.png",
-            name:"Jas Hitam",
-            harga:"Rp. 4.000.000",
-            deskripsi:"Jas dengan pesona yang sangat gagah membuat calon pengantin dengan tampilan...",
-            jenis:"Jas",
-            warna:"Hitam",
-            size:"L"
-        },
-        {
-            url:"../src/assets/images/wed-jas3.png",
-            name:"Jas Biru",
-            harga:"Rp. 3.000.000",
-            deskripsi:"Pesona jas unik dengan kain biru dan dasi bisu. Memiliki kesan yang elegan dan...",
-            jenis:"Jas Pria",
-            warna:"Biru",
-            size:"L"
-        },
-        {
-            url:"../src/assets/images/wed-jas2.png",
-            name:"Jas Katun Hitam",
-            harga:"Rp. 4.500.000",
-            deskripsi:"Jas pria berkain katun sehingga lembut dan sangat nyaman dipakai...",
-            jenis:"Jas Pria",
-            warna:"Hitam",
-            size:"L"
-        },
-        {
-            url:"../src/assets/images/wed-jas1.png",
-            name:"Jas Hitam",
-            harga:"Rp. 4.000.000",
-            deskripsi:"Jas dengan pesona yang sangat gagah membuat calon pengantin dengan tampilan...",
-            jenis:"Jas",
-            warna:"Hitam",
-            size:"L"
-        },
-        {
-            url:"../src/assets/images/wed-jas3.png",
-            name:"Jas Biru",
-            harga:"Rp. 3.000.000",
-            deskripsi:"Pesona jas unik dengan kain biru dan dasi bisu. Memiliki kesan yang elegan dan...",
-            jenis:"Jas Pria",
-            warna:"Biru",
-            size:"L"
-        },
-        {
-            url:"../src/assets/images/wed-jas2.png",
-            name:"Jas Katun Hitam",
-            harga:"Rp. 4.500.000",
-            deskripsi:"Jas pria berkain katun sehingga lembut dan sangat nyaman dipakai...",
-            jenis:"Jas Pria",
-            warna:"Hitam",
-            size:"L"
-        },
-        {
-            url:"../src/assets/images/wed-jas1.png",
-            name:"Jas Hitam",
-            harga:"Rp. 4.000.000",
-            deskripsi:"Jas dengan pesona yang sangat gagah membuat calon pengantin dengan tampilan...",
-            jenis:"Jas",
-            warna:"Hitam",
-            size:"L"
-        },
-    ]
+
+    const [dataCon, setFormCon] = useState([]);
+    const navigate = useNavigate();
+
+    const urlApiENV = import.meta.env.VITE_API_URL;
+    const token = localStorage.getItem("token");
+    const DataUser = JSON.parse(localStorage.getItem("users"));
+    const { id } = useParams();
+    const dressSex = 'Female';
+
+    useEffect(() => {
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
+        if (!DataUser || DataUser.role !== "admin") {
+            navigate("/");
+            return;
+        }
+
+        const fetchFormData = async () => {
+            try {
+                const response = await axios.get(`${urlApiENV}/api/dress/${dressSex}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                console.log("check data response", response.data.data);
+                setFormCon(response.data.data);
+            } catch (error) {
+                console.error('Error fetching form data:', error);
+                Swal.fire({
+                    title: "Oops!",
+                    text: `${error.response ? error.response.data.msg : error.message}`,
+                    icon: "error",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        };
+
+        fetchFormData();
+
+    }, [urlApiENV, navigate, token, DataUser.role, id]);
+
+    const getImageUrl = () => {
+        if (dataCon.length > 0 && dataCon[0].image) {
+            return `${urlApiENV}/${dataCon[0].image.replace(/\\/g, '/')}`;
+        } else {
+            return profile;
+        }
+    };
+
     const handleAddPakaian = () => {
         // Logic untuk menambah vendor baru
     };
@@ -95,9 +70,8 @@ const PakaianPria = () => {
     const handleShowMore = () => {
         setVisibleCount(prevCount => prevCount + 6);
     };
-    
+
     return (
-        <>
         <div className="p-6 bg-white border rounded-lg shadow-md m-3">
             <h1 className="text-[36px] m-5">Pakaian Pria</h1>
             <div className="flex space-x-2 m-5">
@@ -106,10 +80,10 @@ const PakaianPria = () => {
             <div className="flex justify-center m-5">
                 <div className="flex flex-col justify-center">
                     <div className='grid grid-cols-3 gap-14'>
-                        {pakaianData.slice(0, visibleCount).map((pakaian, index) => (
+                        {dataCon.slice(0, visibleCount).map((pakaian, index) => (
                             <PakaianCard
                                 key={index}
-                                url={pakaian.url}
+                                url={getImageUrl()}
                                 name={pakaian.name}
                                 harga={pakaian.harga}
                                 deskripsi={pakaian.deskripsi}
@@ -119,7 +93,7 @@ const PakaianPria = () => {
                             />
                         ))}
                     </div>
-                    {visibleCount < pakaianData.length && (
+                    {visibleCount < dataCon.length && (
                         <div className='flex justify-center m-10'>
                             <button
                                 onClick={handleShowMore}
@@ -132,8 +106,7 @@ const PakaianPria = () => {
                 </div>
             </div>
         </div>
-        </>
     );
 };
 
-export default PakaianPria
+export default PakaianPria;

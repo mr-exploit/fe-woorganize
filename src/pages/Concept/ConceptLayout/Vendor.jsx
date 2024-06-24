@@ -12,12 +12,18 @@ const Vendor = () => {
     const urlApiENV = import.meta.env.VITE_API_URL;
   
     const token = localStorage.getItem('token');
-  
+    const usertoken = localStorage.getItem('users');
+    const uerData = JSON.parse(usertoken);
+
     useEffect(() => {
-       
+        if(!uerData && uerData.role === 'user') {
+            navigate('/');
+            return;
+        }
         const fetchData = async () => {
             try {
-              const url = `${urlApiENV}/api/vendor`;
+            const userId = uerData.id;
+              const url = `${urlApiENV}/api/relasivendor/${userId}`;
 
                 const response = await axios.get(url, {
                     headers: {
@@ -27,7 +33,7 @@ const Vendor = () => {
                 console.log("check data", response.data.data);
                 setDataVendor(response.data.data);
             } catch (err) {
-                console.error("Error during fetch:", err.response ? err.response.data : err.message);
+                console.error("Error during fetch:", err.response ?     err.response.data : err.message);
                 Swal.fire({
                     title: "Error!",
                     text: "Data tidak ditemukan!",
